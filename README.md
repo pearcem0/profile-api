@@ -4,6 +4,8 @@ An experimental and contrived preview of **Golang**. A very simple event driven 
 
 A 'Services' approach - Separate lambda functions for each category of information contact, summary, interests etc. Including all of the basic actions - get, put, delete etc.
 
+![](go-api.gif)
+
 ## Example calls
 
 `curl "https://api.michaelpearce.info/contact?channel=Email"`
