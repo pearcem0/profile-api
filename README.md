@@ -37,8 +37,11 @@ The project is build on AWS Infrastructure and assumes the infrastructure mentio
 ### GO packages
 
 `go get github.com/aws/aws-lambda-go/lambda`
+
 `go get github.com/aws/aws-sdk-go`
+
 `go get github.com/aws/aws-lambda-go/events`
+
 
 ## Build
 
