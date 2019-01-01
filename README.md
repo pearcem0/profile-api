@@ -9,9 +9,13 @@ A 'Services' approach - Separate lambda functions for each category of informati
 ## Example calls
 
 `curl "https://api.michaelpearce.info/contact?channel=Email"`
+
 `curl "https://api.michaelpearce.info/contact?channel=Facebook"`
+
 `curl "https://api.michaelpearce.info/contact?channel=Instagram"`
+
 `curl "https://api.michaelpearce.info/contact?channel=LinkedIn"`
+
 `curl "https://api.michaelpearce.info/contact?channel=Website"`
 
 ## Infrastructure
@@ -33,8 +37,11 @@ The project is build on AWS Infrastructure and assumes the infrastructure mentio
 ### GO packages
 
 `go get github.com/aws/aws-lambda-go/lambda`
+
 `go get github.com/aws/aws-sdk-go`
+
 `go get github.com/aws/aws-lambda-go/events`
+
 
 ## Build
 
