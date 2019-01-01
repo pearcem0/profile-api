@@ -37,3 +37,21 @@ func getChannelItem(channel string) (*contact, error) {
 
 	return cont, nil
 }
+
+func addChannelItem(cont *contact) error {
+	// cont = short for contact
+	newChannel := &dynamodb.PutItemInput{
+		TableName: aws.String("Contact"),
+		Item: map[string]*dynamodb.AttributeValue{
+			"Channel": {
+				S: aws.String(cont.Channel),
+			},
+			"Address": {
+				S: aws.String(cont.Address),
+			},
+		},
+	}
+
+	_, err := datastore.PutItem(newChannel)
+	return err
+}

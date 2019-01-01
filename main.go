@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -15,6 +16,18 @@ var errorLog = log.New(os.Stderr, "ERROR ", log.Llongfile)
 type contact struct {
 	Channel string `json:"channel"`
 	Address string `json:"address"`
+}
+
+// req = short for request
+func reqTypeRouter(req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	switch req.HTTPMethod {
+	case "GET":
+		return getChannel(req)
+	case "POST":
+		return addChannel(req)
+	default:
+		return clientsideErr(http.StatusMethodNotAllowed)
+	}
 }
 
 func getChannel(req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -41,6 +54,28 @@ func getChannel(req events.APIGatewayProxyRequest) (events.APIGatewayProxyRespon
 	}, nil
 }
 
+func addChannel(req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	if req.Headers["Content-Type"] != "application/json" {
+		return clientsideErr(http.StatusNotAcceptable)
+	}
+
+	cont := new(contact)
+	err := json.Unmarshal([]byte(req.Body), cont)
+	if err != nil {
+		return clientsideErr(http.StatusUnprocessableEntity)
+	}
+
+	err = addChannelItem(cont)
+	if err != nil {
+		return serversideErr(err)
+	}
+
+	return events.APIGatewayProxyResponse{
+		StatusCode: 201,
+		Headers:    map[string]string{"Location": fmt.Sprintf("/contact?channel=%s", cont.Channel)},
+	}, nil
+}
+
 func clientsideErr(status int) (events.APIGatewayProxyResponse, error) {
 	return events.APIGatewayProxyResponse{
 		StatusCode: status,
@@ -58,5 +93,5 @@ func serversideErr(err error) (events.APIGatewayProxyResponse, error) {
 }
 
 func main() {
-	lambda.Start(getChannel)
+	lambda.Start(reqTypeRouter)
 }
