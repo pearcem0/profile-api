@@ -11,11 +11,20 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
+var stage = getEnv("STAGE", "dev")
+var region = getEnv("REGION", "eu-west-2")
 var errorLog = log.New(os.Stderr, "ERROR ", log.Llongfile)
 
 type contact struct {
 	Channel string `json:"channel"`
 	Address string `json:"address"`
+}
+
+func getEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
 }
 
 // req = short for request
