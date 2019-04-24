@@ -7,13 +7,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 )
 
-// @TODO - parametize this using Region
-var datastore = dynamodb.New(session.New(), aws.NewConfig().WithRegion("eu-west-2"))
+var datastore = dynamodb.New(session.New(), aws.NewConfig().WithRegion(region))
 
-// @TODO - parametize this use naming convention 'profile-api-<stage>-<tablename>
 func getChannelItem(channel string) (*contact, error) {
+	var tableName = "profile-api-" + stage + "contact"
 	getItemInput := &dynamodb.GetItemInput{
-		TableName: aws.String("Contact"),
+		TableName: aws.String(tableName),
 		Key: map[string]*dynamodb.AttributeValue{
 			"Channel": {
 				S: aws.String(channel),
