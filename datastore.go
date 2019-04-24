@@ -10,6 +10,7 @@ import (
 // @TODO - parametize this using Region
 var datastore = dynamodb.New(session.New(), aws.NewConfig().WithRegion("eu-west-2"))
 
+// @TODO - parametize this use naming convention 'profile-api-<stage>-<tablename>
 func getChannelItem(channel string) (*contact, error) {
 	getItemInput := &dynamodb.GetItemInput{
 		TableName: aws.String("Contact"),

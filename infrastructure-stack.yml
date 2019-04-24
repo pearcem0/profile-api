@@ -1,0 +1,61 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Infrastructure stack for an experimental and contrived preview of Golang.
+Parameters:
+  Stage:
+    Description: Development stage
+    Type: String
+    AllowedValues:
+      - dev
+      - test
+      - beta
+      - prod
+  PITRecovery:
+    Description: Enable Point In Time Recovery
+    Type: String
+    AllowedValues:
+      - true
+      - false
+  PPRBilling:
+    Description: Enable Pay Per Request Billing
+    Type: String
+    AllowedValues:
+      - true
+      - false
+  ReadCapacity:
+    Description: Generic Provisioned Throughput Capacity for Reads (Only required if PPRBilling is false)
+    Type: Number
+    Default: 1
+  WriteCapacity:
+    Description: Generic Provisioned Throughput Capacity for Writes (Only required if PPRBilling is false)
+    Type: Number
+    Default: 1
+Conditions:
+  PITRecoveryEnabled: !Equals [ !Ref PITRecovery, true ]
+  PPRBillingEnabled: !Equals [ !Ref PPRBilling, true ]
+Resources:
+  ContactTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Join:
+          - '-'
+          - - profile-api
+            - Ref: Stage
+            - contact
+      BillingMode: !If [ PPRBillingEnabled, 'PAY_PER_REQUEST', 'PROVISIONED' ]
+      ProvisionedThroughput:
+        ReadCapacityUnits: !If [ PPRBillingEnabled, !Ref 'AWS::NoValue', !Ref ReadCapacity ]
+        WriteCapacityUnits: !If [ PPRBillingEnabled, !Ref 'AWS::NoValue', !Ref WriteCapacity ]
+      PointInTimeRecoverySpecification:
+       PointInTimeRecoveryEnabled: !If [ PITRecoveryEnabled, true, false ]
+      AttributeDefinitions:
+       - {AttributeName: Channel, AttributeType: S}
+       - {AttributeName: Address, AttributeType: S}
+      KeySchema:
+       - {AttributeName: Channel, KeyType: HASH}
+       - {AttributeName: Address, KeyType: RANGE}
+      Tags:
+
+        - {Key: Stage, Value: !Ref Stage}
+        - {Key: PIT-Recovery, Value: !Ref PITRecovery}
+        - {Key: PPR-Billing, Value: !Ref PPRBilling}
