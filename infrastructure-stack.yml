@@ -50,10 +50,8 @@ Resources:
        PointInTimeRecoveryEnabled: !If [ PITRecoveryEnabled, true, false ]
       AttributeDefinitions:
        - {AttributeName: Channel, AttributeType: S}
-       - {AttributeName: Address, AttributeType: S}
       KeySchema:
        - {AttributeName: Channel, KeyType: HASH}
-       - {AttributeName: Address, KeyType: RANGE}
       Tags:
 
         - {Key: Stage, Value: !Ref Stage}
