@@ -52,6 +52,12 @@ Set Go OS and Architecture variables so that it is built to run on the Linux ser
 
 `env GOOS=linux GOARCH=amd64 go build -o /tmp/main contact`
 
+### Runtime Env Vars
+
+To use environment variables at run time I've added a function `getEnv` in the main file that takes a key and a fallback. You can call this function with the key you are expecting and if that environment variable is not set, use the fallback. This can be used for things like Stage, Region, etc. 
+
+To use with Lambda, the environment variables will need to be set on creation or by updating the lambda function to include the variable and it's value. Similarly if you are running the code locally you would need to set the variable with a value, or the fallback (passed into the function in the code) is used.
+
 ### Package it up for Lambda
 
 Package it up as a zip file for Lambda.
