@@ -18,6 +18,14 @@ A 'Services' approach - Separate lambda functions for each category of informati
 
 `curl "https://api.michaelpearce.info/contact?channel=Website"`
 
+`curl "https://api.michaelpearce.info/summary?section=Interests"`
+
+`curl "https://api.michaelpearce.info/summary?section=Certifications"`
+
+`curl "https://api.michaelpearce.info/summary?section=Examples"`
+
+`curl "https://api.michaelpearce.info/summary?section=Code"`
+
 ## Infrastructure
 
 Build on services provided by Amazon Web Services (AWS) cloud.

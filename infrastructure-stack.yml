@@ -122,3 +122,70 @@ Resources:
       Statistic: Sum
       Threshold: 0
       Unit: Count
+  SummaryTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Join:
+          - '-'
+          - - profile-api
+            - Ref: Stage
+            - summarys
+      BillingMode: !If [ PPRBillingEnabled, 'PAY_PER_REQUEST', 'PROVISIONED' ]
+      ProvisionedThroughput:
+        ReadCapacityUnits: !If [ PPRBillingEnabled, !Ref 'AWS::NoValue', !Ref ReadCapacity ]
+        WriteCapacityUnits: !If [ PPRBillingEnabled, !Ref 'AWS::NoValue', !Ref WriteCapacity ]
+      PointInTimeRecoverySpecification:
+       PointInTimeRecoveryEnabled: !If [ PITRecoveryEnabled, true, false ]
+      AttributeDefinitions:
+       - {AttributeName: Section, AttributeType: S}
+      KeySchema:
+       - {AttributeName: Section, KeyType: HASH}
+      Tags:
+
+        - {Key: Stage, Value: !Ref Stage}
+        - {Key: PIT-Recovery, Value: !Ref PITRecovery}
+        - {Key: PPR-Billing, Value: !Ref PPRBilling}
+  SummaryTableThrottledAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: DDBAlarmsEnabled
+    DependsOn: SummaryTable
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - Ref: DynamoDBAlarmsSNSTopic
+      AlarmDescription:
+        Fn::Join:
+          - ''
+          -
+            - Is DynamoDB Summary Table (
+            - !Ref Stage
+            - ") being throttled"
+      AlarmName:
+        Fn::Join:
+          - ''
+          -
+            - DynamoDB Summary Table (
+            - !Ref Stage
+            - ) Throttled
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: TableName
+          Value:
+            Fn::Join:
+            - '-'
+            - - profile-api
+              - Ref: Stage
+              - summary
+      EvaluationPeriods: 1
+      InsufficientDataActions:
+        - Ref: DynamoDBAlarmsSNSTopic
+      TreatMissingData: notBreaching
+      MetricName: ThrottledRequests
+      Namespace: AWS/DynamoDB
+      OKActions:
+        - Ref: DynamoDBAlarmsSNSTopic
+      Period: 60
+      Statistic: Sum
+      Threshold: 0
+      Unit: Count
