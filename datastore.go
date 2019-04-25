@@ -7,12 +7,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 )
 
-// @TODO - parametize this using Region
-var datastore = dynamodb.New(session.New(), aws.NewConfig().WithRegion("eu-west-2"))
+var datastore = dynamodb.New(session.New(), aws.NewConfig().WithRegion(region))
+var contactTableName = "profile-api-" + stage + "-contact"
 
 func getChannelItem(channel string) (*contact, error) {
+
 	getItemInput := &dynamodb.GetItemInput{
-		TableName: aws.String("Contact"),
+		TableName: aws.String(contactTableName),
 		Key: map[string]*dynamodb.AttributeValue{
 			"Channel": {
 				S: aws.String(channel),
@@ -41,7 +42,7 @@ func getChannelItem(channel string) (*contact, error) {
 func addChannelItem(cont *contact) error {
 	// cont = short for contact
 	newChannel := &dynamodb.PutItemInput{
-		TableName: aws.String("Contact"),
+		TableName: aws.String(contactTableName),
 		Item: map[string]*dynamodb.AttributeValue{
 			"Channel": {
 				S: aws.String(cont.Channel),

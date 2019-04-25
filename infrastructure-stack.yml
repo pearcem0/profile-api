@@ -1,0 +1,124 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Infrastructure stack for an experimental and contrived preview of Golang.
+Parameters:
+  Stage:
+    Description: Development stage
+    Type: String
+    AllowedValues:
+      - dev
+      - test
+      - beta
+      - prod
+    ConstraintDescription: Must specify dev, test, beta or prod
+  PITRecovery:
+    Description: Enable Point In Time Recovery
+    Type: String
+    AllowedValues:
+      - true
+      - false
+    ConstraintDescription: Must specify true or false
+  PPRBilling:
+    Description: Enable Pay Per Request Billing
+    Type: String
+    AllowedValues:
+      - true
+      - false
+    ConstraintDescription: Must specify true or false
+  ReadCapacity:
+    Description: Generic expected Provisioned Throughput Capacity for Reads (Only required if PPRBilling is false, but can also be used for Cloud Watch Monitoring alarms)
+    Type: Number
+    Default: 1
+  WriteCapacity:
+    Description: Generic expected Provisioned Throughput Capacity for Writes (Only required if PPRBilling is false, but can also be used for Cloud Watch Monitoring alarms)
+    Type: Number
+    Default: 1
+  EmailAddress:
+    Type: String
+    Description: Email address that Cloud Watch alerts will be sent to
+  DynamoDBTableMonitoring:
+    Type: String
+    Default: false
+    AllowedValues:
+      - true
+      - false
+    Description: Should Cloud Watch monitoring alarms be set up for DynamoDB Tables
+    ConstraintDescription: Must specify true or false
+Conditions:
+  PITRecoveryEnabled: !Equals [ !Ref PITRecovery, true ]
+  PPRBillingEnabled: !Equals [ !Ref PPRBilling, true ]
+  DDBAlarmsEnabled: !Equals [ !Ref DynamoDBTableMonitoring, true ]
+Resources:
+  ContactTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Join:
+          - '-'
+          - - profile-api
+            - Ref: Stage
+            - contact
+      BillingMode: !If [ PPRBillingEnabled, 'PAY_PER_REQUEST', 'PROVISIONED' ]
+      ProvisionedThroughput:
+        ReadCapacityUnits: !If [ PPRBillingEnabled, !Ref 'AWS::NoValue', !Ref ReadCapacity ]
+        WriteCapacityUnits: !If [ PPRBillingEnabled, !Ref 'AWS::NoValue', !Ref WriteCapacity ]
+      PointInTimeRecoverySpecification:
+       PointInTimeRecoveryEnabled: !If [ PITRecoveryEnabled, true, false ]
+      AttributeDefinitions:
+       - {AttributeName: Channel, AttributeType: S}
+      KeySchema:
+       - {AttributeName: Channel, KeyType: HASH}
+      Tags:
+
+        - {Key: Stage, Value: !Ref Stage}
+        - {Key: PIT-Recovery, Value: !Ref PITRecovery}
+        - {Key: PPR-Billing, Value: !Ref PPRBilling}
+  DynamoDBAlarmsSNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: dynamodb-profile-api-alerts
+      Subscription:
+        - Endpoint: !Ref EmailAddress
+          Protocol: email
+  ContactTableThrottledAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: DDBAlarmsEnabled
+    DependsOn: ContactTable
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - Ref: DynamoDBAlarmsSNSTopic
+      AlarmDescription:
+        Fn::Join:
+          - ''
+          -
+            - Is DynamoDB Contacts Table (
+            - !Ref Stage
+            - ") being throttled"
+      AlarmName:
+        Fn::Join:
+          - ''
+          -
+            - DynamoDB Contact Table (
+            - !Ref Stage
+            - ) Throttled
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: TableName
+          Value:
+            Fn::Join:
+            - '-'
+            - - profile-api
+              - Ref: Stage
+              - contact
+      EvaluationPeriods: 1
+      InsufficientDataActions:
+        - Ref: DynamoDBAlarmsSNSTopic
+      TreatMissingData: notBreaching
+      MetricName: ThrottledRequests
+      Namespace: AWS/DynamoDB
+      OKActions:
+        - Ref: DynamoDBAlarmsSNSTopic
+      Period: 60
+      Statistic: Sum
+      Threshold: 0
+      Unit: Count
