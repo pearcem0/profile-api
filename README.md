@@ -48,14 +48,14 @@ The project is build on AWS Infrastructure and assumes the infrastructure mentio
 
 ### Env Vars & Go build
 
-Set Go OS and Architecture variables so that it is built to run on the Linux servers that AWS Lambda uses. Build it generally wherever you want, but the temp folder keeps things tidy in the long run. 
+Set Go OS and Architecture variables so that it is built to run on the Linux servers that AWS Lambda uses. Build it generally wherever you want, but the temp folder keeps things tidy in the long run. the name of the binary file should represent the main function name that is initially called to trigger the function, in this case `main`. The final input parameter is the location of the go project that you want to build, assuming it can load the package from your $GOPATH.
 
-`env GOOS=linux GOARCH=amd64 go build -o /tmp/contact contact`
+`env GOOS=linux GOARCH=amd64 go build -o /tmp/main contact`
 
 ### Package it up for Lambda
 
 Package it up as a zip file for Lambda.
-`zip -j /tmp/main.zip /tmp/contact`
+`zip -j /tmp/main.zip /tmp/main`
 
 
 ### Deploy new code version on Lambda
